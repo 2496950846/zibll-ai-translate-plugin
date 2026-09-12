@@ -10,6 +10,26 @@
             return;
         }
 
+        // =========================================================
+        // 音效播放
+        // =========================================================
+        var sound = null;
+        function playSuccessSound() {
+            if (!zibll_ait.sound_enabled || !zibll_ait.sound_url) {
+                return;
+            }
+            try {
+                if (!sound) {
+                    sound = new Audio(zibll_ait.sound_url);
+                }
+                sound.volume = (zibll_ait.sound_volume || 50) / 100;
+                sound.currentTime = 0;
+                sound.play().catch(function() { /* 忽略自动播放限制 */ });
+            } catch (e) {
+                // 忽略错误
+            }
+        }
+
         // 调试日志：便于排查“文章翻译按钮不显示”问题（不影响功能）
         try {
             console.log('[zibll_ait] post_dropdown =', zibll_ait.post_dropdown);
@@ -100,6 +120,9 @@
                         resetTranslateBtn($btn);
                         return;
                     }
+
+                    // 播放成功音效
+                    playSuccessSound();
 
                     if (mode === 'reply') {
                         handleTranslateReply($btn, res.data.html);
@@ -377,6 +400,9 @@
                         return;
                     }
 
+                    // 播放成功音效
+                    playSuccessSound();
+
                     var html = (res.data && res.data.html) ? res.data.html : '';
                     if (mode === 'modal') {
                         openTranslateModal(html);
@@ -448,7 +474,7 @@
                 return;
             }
             var $btn = $('<a href="javascript:;" class="zibll-ait-post-dropdown c-blue but hollow radius ml6">' +
-                '<i class="fa fa-globe mr6 fa-fw" aria-hidden="true"></i>' +
+                '<i class="fa fa-language mr6 fa-fw" aria-hidden="true"></i>' +
                 escHtml(cfg.label || '文章翻译') + '</a>');
             $btn.attr('data-id', cfg.post_id)
                 .attr('data-nonce', cfg.nonce)
@@ -464,7 +490,7 @@
         // 生成并追加“文章翻译”菜单项（<li><a>）
         function appendPostDropdownItem($menu, cfg) {
             var $li = $('<li><a href="javascript:;" class="zibll-ait-post-dropdown c-blue">' +
-                '<i class="fa fa-globe mr6 fa-fw" aria-hidden="true"></i>' +
+                '<i class="fa fa-language mr6 fa-fw" aria-hidden="true"></i>' +
                 escHtml(cfg.label || '文章翻译') + '</a></li>');
             $li.find('a')
                 .attr('data-id', cfg.post_id)
@@ -618,6 +644,9 @@
                         return;
                     }
 
+                    // 播放成功音效
+                    playSuccessSound();
+
                     var html = (res.data && res.data.html) ? res.data.html : '';
                     if (mode === 'modal') {
                         openTranslateModal(html);
@@ -658,7 +687,7 @@
             $btn.removeData('zibll-ait-shown');
             var caret = $btn.data('has-menu') === '1'
                 ? '<i class="fa fa-angle-down ml6" aria-hidden="true"></i>' : '';
-            $btn.html('<i class="fa fa-globe mr6 fa-fw" aria-hidden="true"></i>翻译' + caret);
+            $btn.html('<i class="fa fa-language mr6 fa-fw" aria-hidden="true"></i>翻译' + caret);
         }
 
         // 显示译文：从缓存恢复译文内容

@@ -27,7 +27,7 @@ function zibll_ait_create_options()
     CSF::createOptions($prefix, array(
         'menu_title'      => 'AI翻译',
         'menu_slug'       => 'zibll_ait_options',
-        'framework_title' => 'AI翻译 <small>v1.1.6</small>',
+        'framework_title' => 'AI翻译 <small>v1.0.0</small>',
         'theme'           => 'light',
     ));
 
@@ -245,6 +245,50 @@ function zibll_ait_create_options()
                 'unit'    => '',
             ),
         ),
+    ));
+
+    // 音效设置
+    CSF::createSection($prefix, array(
+        'id'     => 'sound',
+        'title'  => '音效设置',
+        'icon'   => 'fa fa-volume-up',
+        'fields' => array(
+            array(
+                'id'      => 'sound_enabled',
+                'type'    => 'switcher',
+                'title'   => '启用 AI 回复后播放音效',
+                'default' => false,
+                'desc'    => '开启后，每次 AI 翻译回复成功生成后会播放提示音效',
+            ),
+            array(
+                'id'      => 'sound_file',
+                'type'    => 'select',
+                'title'   => '选择音效文件',
+                'options' => zibll_ait_sound_options(),
+                'default' => 'iOS10 Alert1.ogg',
+                'desc'    => '从插件内置音效中选择，也可在 sound/ 目录上传自定义音效',
+                'dependency' => array('sound_enabled', '==', '1'),
+            ),
+            array(
+                'id'      => 'sound_volume',
+                'type'    => 'slider',
+                'title'   => '音效音量',
+                'min'     => 0,
+                'max'     => 100,
+                'step'    => 10,
+                'default' => 50,
+                'unit'    => '%',
+                'dependency' => array('sound_enabled', '==', '1'),
+            ),
+        ),
+    ));
+
+    // 插件更新
+    CSF::createSection($prefix, array(
+        'id'     => 'update',
+        'title'  => '插件更新',
+        'icon'   => 'fa fa-cloud-download',
+        'fields' => zibll_ait_update_csf_fields(),
     ));
 }
 

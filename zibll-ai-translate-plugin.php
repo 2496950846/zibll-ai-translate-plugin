@@ -32,9 +32,23 @@ if (function_exists('get_template') && get_template() != 'zibll') {
     return;
 }
 
+// 插件基本信息常量
+define('ZIBLL_AIT_PLUGIN_VERSION', '1.0.0');
+define('ZIBLL_AIT_PLUGIN_NAME', '子比AI翻译插件');
+define('ZIBLL_AIT_PLUGIN_DESCRIPTION', '子比主题 AI 翻译插件');
+define('ZIBLL_AIT_PLUGIN_AUTHOR', 'Zibll');
+define('ZIBLL_AIT_PLUGIN_SLUG', 'zibll-ai-translate-plugin');
+define('ZIBLL_AIT_SLUG', ZIBLL_AIT_PLUGIN_SLUG);
+define('ZIBLL_AIT_PLUGIN_BASENAME', plugin_basename(__FILE__));
+
 // 路径与 URL 常量（唯一前缀 zibll_ait）
 define('ZIBLL_AIT_PATH', plugin_dir_path(__FILE__));
 define('ZIBLL_AIT_URL', plugin_dir_url(__FILE__));
+
+// 在线更新：GitHub 仓库与 Release Tag（请替换为实际地址）
+define('ZIBLL_AIT_REPO', '2496950846/zibll-ai-translate-plugin');
+define('ZIBLL_AIT_TAG', 'v1.0.0');
+define('ZIBLL_AIT_REPO_URL', 'https://github.com/2496950846/zibll-ai-translate-plugin/releases');
 
 // 统一读取独立 option（严禁写入 zibll_options）
 if (!function_exists('zibll_ait_options')) {
@@ -64,6 +78,7 @@ function zibll_ait_init()
     }
 
     $require_once = array(
+        'includes/update.php',
         'includes/ai.php',
         'includes/functions.php',
         'includes/admin-options.php',
@@ -71,4 +86,13 @@ function zibll_ait_init()
     foreach ($require_once as $require) {
         require_once ZIBLL_AIT_PATH . $require;
     }
+}
+
+// 添加插件操作链接：在禁用按钮左侧添加"插件配置"绿色按钮
+add_filter('plugin_action_links_' . ZIBLL_AIT_PLUGIN_BASENAME, 'zibll_ait_plugin_action_links');
+function zibll_ait_plugin_action_links($links)
+{
+    $config_link = '<a href="' . esc_url(admin_url('admin.php?page=zibll_ait_options')) . '" style="color:#52c41a;font-weight:600;">插件配置</a>';
+    array_unshift($links, $config_link);
+    return $links;
 }

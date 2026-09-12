@@ -87,7 +87,7 @@ function zibll_ait_comment_action_list($lists, $comment)
         'data-id="' . $comment->comment_ID . '" ' .
         'data-mode="' . esc_attr($mode) . '" ' .
         'form-action="' . $action . '" form-data="' . $data . '">' .
-        '<i class="fa fa-globe mr6 fa-fw" aria-hidden="true"></i>翻译</a>' .
+        '<i class="fa fa-language mr6 fa-fw" aria-hidden="true"></i>翻译</a>' .
         $lang_html .
         '</li>';
 
@@ -400,7 +400,7 @@ function zibll_ait_post_menu_html($post_id)
         'data-mode="' . esc_attr($mode) . '" ' .
         'data-nonce="' . $nonce . '" ' .
         'data-has-menu="' . ($has_menu ? '1' : '0') . '">' .
-        '<i class="fa fa-globe mr6 fa-fw" aria-hidden="true"></i>翻译' . $caret . '</button>';
+        '<i class="fa fa-language mr6 fa-fw" aria-hidden="true"></i>翻译' . $caret . '</button>';
 
     if ($has_menu) {
         $html .= '<div class="dropdown-menu zibll-ait-lang-menu">';
@@ -454,7 +454,7 @@ function zibll_ait_post_dropdown_item($action, $post)
         'data-id="' . $post->ID . '" ' .
         'data-nonce="' . $nonce . '" ' .
         'data-mode="' . esc_attr($mode) . '">' .
-        '<i class="fa fa-globe mr6 fa-fw" aria-hidden="true"></i>文章翻译</a></li>';
+        '<i class="fa fa-language mr6 fa-fw" aria-hidden="true"></i>文章翻译</a></li>';
 
     return $action . $item;
 }
@@ -927,7 +927,7 @@ function zibll_ait_render_modal()
         'id'              => 'zibll-ait-modal',
         'colorful_header' => true,
         'header_class'    => 'jb-green',
-        'header_icon'     => '<i class="fa fa-globe" aria-hidden="true"></i>',
+        'header_icon'     => '<i class="fa fa-language" aria-hidden="true"></i>',
         'title'           => '翻译结果',
         'content'         => '<div class="zibll-ait-modal-content"></div>',
         'buttons_class'   => 'but jb-green btn-block',
@@ -1004,7 +1004,7 @@ function zibll_ait_render_lang_modal()
         return;
     }
 
-    $header = zib_get_modal_colorful_header('jb-green', '<i class="fa fa-globe"></i>', '选择翻译语言', true);
+    $header = zib_get_modal_colorful_header('jb-green', '<i class="fa fa-language"></i>', '选择翻译语言', true);
     ?>
     <div class="modal fade zibll-ait-lang-modal" id="zibll-ait-lang-modal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
@@ -1032,7 +1032,7 @@ function zibll_ait_enqueue_assets()
         return;
     }
 
-    $version = '1.2.0';
+    $version = '1.0.0';
 
     // CSS
     wp_enqueue_style(
@@ -1077,7 +1077,39 @@ function zibll_ait_enqueue_assets()
         'langs'         => $target_langs,
         'default_lang'  => $target_lang,
         'require_lang'  => $require_lang,
+        // 音效配置
+        'sound_enabled' => (bool) zibll_ait_options('sound_enabled', false),
+        'sound_file'    => zibll_ait_options('sound_file', 'iOS10 Alert1.ogg'),
+        'sound_volume'  => (int) zibll_ait_options('sound_volume', 50),
+        'sound_url'     => ZIBLL_AIT_URL . 'sound/' . zibll_ait_options('sound_file', 'iOS10 Alert1.ogg'),
     ));
+}
+
+/**
+ * 获取音效文件选项列表（用于后台 select 下拉框）
+ */
+if (!function_exists('zibll_ait_sound_options')) {
+    function zibll_ait_sound_options()
+    {
+        $sound_dir = ZIBLL_AIT_PATH . 'sound/';
+        $options = array();
+        if (is_dir($sound_dir)) {
+            $files = glob($sound_dir . '*.{ogg,mp3,wav,m4a,flac}', GLOB_BRACE);
+            foreach ($files as $file) {
+                $filename = basename($file);
+                $options[$filename] = $filename;
+            }
+        }
+        // 如果没有找到音效文件，使用默认值
+        if (empty($options)) {
+            $options = array(
+                'iOS10 Alert1.ogg' => 'iOS10 Alert1.ogg',
+                'iOS10 Sound09.ogg' => 'iOS10 Sound09.ogg',
+                '脉冲增强.mp3' => '脉冲增强.mp3',
+            );
+        }
+        return $options;
+    }
 }
 
 /**
