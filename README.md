@@ -1,4 +1,4 @@
-# Zibll-AI-Translate-Plugin 更新日志
+# 子比AI翻译插件 更新日志
 
 ## V1.0.0 (2026-09-12)
 
