@@ -1,7 +1,7 @@
 <?php
 /*
- * Plugin Name: Zibll-AI-Translate-Plugin
- * Description: 子比主题一键 AI 翻译：支持评论、文章、帖子等多种场景的外文翻译。需后台配置 AI 模型（OpenAI 兼容接口）。
+ * Plugin Name: 子比AI翻译插件
+ * Description: 子比AI翻译插件 — 子比主题一键 AI 翻译：支持评论、文章、帖子等多种场景的外文翻译。需后台配置 AI 模型（OpenAI 兼容接口）。
  * Version: 1.0.0
  * Author: Zibll
  * Author QQ: 2496950846
