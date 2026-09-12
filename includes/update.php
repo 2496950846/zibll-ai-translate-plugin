@@ -390,8 +390,9 @@ add_action('wp_ajax_zibll_ait_online_update', 'zibll_ait_ajax_online_update');
  */
 function zibll_ait_get_download_url($version)
 {
-    $tag = ZIBLL_AIT_TAG;
-    // 优先使用 zipball API
+    // 确保 tag 有 v 前缀（GitHub 标准格式）
+    $tag = 'v' . ltrim((string) $version, 'vV');
+    // zipball API：https://api.github.com/repos/{repo}/zipball/{tag}
     return 'https://api.github.com/repos/' . ZIBLL_AIT_REPO . '/zipball/' . $tag;
 }
 
