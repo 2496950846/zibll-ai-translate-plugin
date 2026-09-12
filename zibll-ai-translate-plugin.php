@@ -2,7 +2,7 @@
 /*
  * Plugin Name: 子比AI翻译插件
  * Description: 子比AI翻译插件 — 子比主题一键 AI 翻译：支持评论、文章、帖子等多种场景的外文翻译。需后台配置 AI 模型（OpenAI 兼容接口）。
- * Version: 1.0.1
+ * Version: 1.0.0
  * Author: Zibll
  * Author QQ: 2496950846
  * Requires at least: 5.2
@@ -33,7 +33,7 @@ if (function_exists('get_template') && get_template() != 'zibll') {
 }
 
 // 插件基本信息常量
-define('ZIBLL_AIT_PLUGIN_VERSION', '1.0.1');
+define('ZIBLL_AIT_PLUGIN_VERSION', '1.0.0');
 define('ZIBLL_AIT_PLUGIN_NAME', '子比AI翻译插件');
 define('ZIBLL_AIT_PLUGIN_DESCRIPTION', '子比主题 AI 翻译插件');
 define('ZIBLL_AIT_PLUGIN_AUTHOR', 'Zibll');
@@ -47,7 +47,7 @@ define('ZIBLL_AIT_URL', plugin_dir_url(__FILE__));
 
 // 在线更新：GitHub 仓库与 Release Tag（请替换为实际地址）
 define('ZIBLL_AIT_REPO', '2496950846/zibll-ai-translate-plugin');
-define('ZIBLL_AIT_TAG', 'v1.0.1');
+define('ZIBLL_AIT_TAG', 'V1.0.0');
 define('ZIBLL_AIT_REPO_URL', 'https://github.com/2496950846/zibll-ai-translate-plugin/releases');
 // 国内镜像代理（GitHub API / zipball 下载加速，留空则直连 GitHub）
 define('ZIBLL_AIT_PROXY', 'https://mirror.ghproxy.com/');
