@@ -12,6 +12,7 @@ if (!defined('ABSPATH')) {
 
 /**
  * 获取 GitHub Release 数据（带缓存）
+ * 优先直连 GitHub，失败后自动切换国内镜像代理重试。
  */
 function zibll_ait_get_github_release()
 {
@@ -21,34 +22,61 @@ function zibll_ait_get_github_release()
         return $cached;
     }
 
-    $url = 'https://api.github.com/repos/' . ZIBLL_AIT_REPO . '/releases/tags/' . ZIBLL_AIT_TAG;
-
-    $response = wp_remote_get($url, array(
-        'timeout' => 15,
-        'headers' => array(
-            'Accept' => 'application/vnd.github.v3+json',
-        ),
-    ));
-
-    if (is_wp_error($response)) {
-        set_transient($cache_key, false, HOUR_IN_SECONDS);
-        return false;
+    $base_url = 'https://api.github.com/repos/' . ZIBLL_AIT_REPO . '/releases/tags/' . ZIBLL_AIT_TAG;
+    // 主镜像与备用镜像
+    $proxies = array();
+    if (ZIBLL_AIT_PROXY) {
+        $proxies[] = rtrim(ZIBLL_AIT_PROXY, '/') . '/' . ltrim($base_url, 'http://');
+    }
+    if (ZIBLL_AIT_PROXY_BAK && ZIBLL_AIT_PROXY_BAK !== ZIBLL_AIT_PROXY) {
+        $proxies[] = rtrim(ZIBLL_AIT_PROXY_BAK, '/') . '/' . ltrim($base_url, 'http://');
     }
 
-    $code = (int) wp_remote_retrieve_response_code($response);
-    if (200 !== $code) {
-        set_transient($cache_key, false, HOUR_IN_SECONDS);
-        return false;
+    // 依次尝试：直连 → 主镜像 → 备用镜像
+    $attempts = array($base_url);
+    $attempts = array_merge($attempts, $proxies);
+
+    foreach ($attempts as $attempt_url) {
+        $response = wp_remote_get($attempt_url, array(
+            'timeout' => 15,
+            'headers' => array(
+                'Accept' => 'application/vnd.github.v3+json',
+            ),
+            'sslverify' => false,
+        ));
+
+        if (!is_wp_error($response) && 200 === (int) wp_remote_retrieve_response_code($response)) {
+            $body = wp_remote_retrieve_body($response);
+            $data = json_decode($body, true);
+            if ($data && isset($data['tag_name'])) {
+                set_transient($cache_key, $data, HOUR_IN_SECONDS);
+                return $data;
+            }
+        }
+
+        // 首次失败后用更长超时重试同 URL
+        if (is_wp_error($response) || 200 !== (int) wp_remote_retrieve_response_code($response)) {
+            $retry = wp_remote_get($attempt_url, array(
+                'timeout' => 30,
+                'headers' => array(
+                    'Accept' => 'application/vnd.github.v3+json',
+                ),
+                'sslverify' => false,
+            ));
+            if (!is_wp_error($retry) && 200 === (int) wp_remote_retrieve_response_code($retry)) {
+                $body = wp_remote_retrieve_body($retry);
+                $data = json_decode($body, true);
+                if ($data && isset($data['tag_name'])) {
+                    set_transient($cache_key, $data, HOUR_IN_SECONDS);
+                    return $data;
+                }
+            }
+        }
     }
 
-    $data = json_decode(wp_remote_retrieve_body($response), true);
-    if (!$data || !isset($data['tag_name'])) {
-        set_transient($cache_key, false, HOUR_IN_SECONDS);
-        return false;
-    }
-
-    set_transient($cache_key, $data, HOUR_IN_SECONDS);
-    return $data;
+    error_log('[ZibllAI翻译] GitHub API 直连与所有镜像代理均失败');
+    set_transient($cache_key, false, HOUR_IN_SECONDS);
+    return false;
 }
 
 /**
@@ -173,6 +201,11 @@ function zibll_ait_update_csf_fields()
         . '<input type="hidden" ajax-name="action" value="zibll_ait_admin_detect_update">'
         . '</div>';
 
+    $proxy_hint = '';
+    if (ZIBLL_AIT_PROXY) {
+        $proxy_hint = '<p class="muted-2-color">当前使用镜像代理检测：<code>' . esc_html(rtrim(ZIBLL_AIT_PROXY, '/')) . '</code>。若直连 GitHub 正常，可留空此常量改用直连。</p>';
+    }
+
     return array(
         array(
             'type'    => 'notice',
@@ -184,6 +217,7 @@ function zibll_ait_update_csf_fields()
             'type'    => 'content',
             'content' => '<p>插件更新来源为 GitHub Release（<a href="' . esc_url(ZIBLL_AIT_REPO_URL) . '" target="_blank" rel="noopener">子比AI翻译插件</a>，Tag: <code>' . esc_html(ZIBLL_AIT_TAG) . '</code>）。</p>'
                 . '<p>点击「检测更新」立即检查；有新版时点「在线更新」自动下载并覆盖升级。</p>'
+                . $proxy_hint
                 . '<p class="muted-2-color">升级前建议备份插件目录与数据库；在线更新过程请勿刷新页面。</p>',
         ),
     );
@@ -301,19 +335,18 @@ function zibll_ait_ajax_online_update()
         wp_send_json(array('error' => 1, 'msg' => '无法获取下载链接'));
     }
 
-    // 创建临时目录
-    $temp_dir = wp_tempnam('zibll_ait_update');
-    if (is_wp_error($temp_dir)) {
-        wp_send_json(array('error' => 1, 'msg' => '临时文件创建失败'));
+    // 创建临时目录（使用 tempnam 生成唯一文件名后改为目录）
+    $temp_base = wp_tempdir();
+    if (is_wp_error($temp_base)) {
+        wp_send_json(array('error' => 1, 'msg' => '临时目录创建失败'));
     }
-    $temp_dir = dirname($temp_dir);
+    $temp_dir = $temp_base . '/zibll_ait_' . md5($version . time());
     @mkdir($temp_dir, 0755, true);
 
     // 下载 zip
     $zip_file = $temp_dir . '/update.zip';
     $download = download_url($download_url);
     if (is_wp_error($download)) {
-        @unlink($temp_dir . '/update.zip');
         @rmdir($temp_dir);
         wp_send_json(array('error' => 1, 'msg' => '下载失败：' . $download->get_error_message()));
     }
@@ -386,14 +419,17 @@ function zibll_ait_ajax_online_update()
 add_action('wp_ajax_zibll_ait_online_update', 'zibll_ait_ajax_online_update');
 
 /**
- * 获取指定版本的下载 URL
+ * 获取指定版本的下载 URL（自动拼接镜像代理前缀）
  */
 function zibll_ait_get_download_url($version)
 {
     // 确保 tag 有 v 前缀（GitHub 标准格式）
     $tag = 'v' . ltrim((string) $version, 'vV');
     // zipball API：https://api.github.com/repos/{repo}/zipball/{tag}
-    return 'https://api.github.com/repos/' . ZIBLL_AIT_REPO . '/zipball/' . $tag;
+    $raw_url = 'https://api.github.com/repos/' . ZIBLL_AIT_REPO . '/zipball/' . $tag;
+    // 若有镜像代理，则拼接前缀（优先主镜像，回退备用镜像）
+    $proxy = ZIBLL_AIT_PROXY ? rtrim(ZIBLL_AIT_PROXY, '/') : (ZIBLL_AIT_PROXY_BAK ? rtrim(ZIBLL_AIT_PROXY_BAK, '/') : '');
+    return $proxy ? $proxy . '/' . ltrim($raw_url, 'http://') : $raw_url;
 }
 
 /**

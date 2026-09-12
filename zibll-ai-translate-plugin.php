@@ -49,6 +49,10 @@ define('ZIBLL_AIT_URL', plugin_dir_url(__FILE__));
 define('ZIBLL_AIT_REPO', '2496950846/zibll-ai-translate-plugin');
 define('ZIBLL_AIT_TAG', 'v1.0.1');
 define('ZIBLL_AIT_REPO_URL', 'https://github.com/2496950846/zibll-ai-translate-plugin/releases');
+// 国内镜像代理（GitHub API / zipball 下载加速，留空则直连 GitHub）
+define('ZIBLL_AIT_PROXY', 'https://mirror.ghproxy.com/');
+// 备用镜像（主镜像不可用时自动切换）
+define('ZIBLL_AIT_PROXY_BAK', 'https://gh-proxy.com/');
 
 // 统一读取独立 option（严禁写入 zibll_options）
 if (!function_exists('zibll_ait_options')) {
