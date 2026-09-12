@@ -1,0 +1,231 @@
+/* 子比AI翻译插件 前端样式（复用主题变量，兼容暗色模式） */
+
+.zibll-ait-result {
+    background: var(--muted-bg-color);
+    border: 1px solid var(--main-border-color);
+    border-radius: var(--main-radius);
+    padding: 8px 12px;
+}
+
+.zibll-ait-tip {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    margin-top: 4px;
+    clear: both;
+    font-style: normal;
+    font-weight: 500;
+}
+
+.zibll-ait-box {
+    background: var(--muted-bg-color);
+    border: 1px solid var(--main-border-color);
+    border-radius: var(--main-radius);
+    padding: 12px 16px;
+    line-height: 1.6;
+}
+
+.zibll-ait-box-head {
+    display: flex;
+    align-items: center;
+}
+
+.zibll-ait-box-body {
+    word-break: break-word;
+}
+
+/* 评论操作菜单内的"翻译"按钮：与主题下拉菜单项对齐，图标和文字显示蓝色 */
+.zibll-ait-action {
+    padding: 8px 16px 8px 4px;
+}
+
+.zibll-ait-action .zibll-ait-translate {
+    display: block;
+    flex: 1;
+    color: #2b7fff !important;
+    white-space: nowrap;
+}
+
+.zibll-ait-action .zibll-ait-translate .fa {
+    color: #2b7fff !important;
+    transform: translateX(-4px);
+}
+
+.zibll-ait-action .zibll-ait-translate:hover,
+.zibll-ait-action .zibll-ait-translate:focus {
+    text-decoration: none;
+}
+
+/* 文章"三个点"菜单内的"文章翻译"按钮：
+   与评论区翻译按钮保持一致的蓝色图标与文字（#2b7fff）。
+   因主题 .dropdown-menu a 优先级高于 .c-blue，这里单独指定以覆盖默认色。 */
+.dropdown-menu .zibll-ait-post-dropdown {
+    color: #2b7fff;
+}
+
+.dropdown-menu .zibll-ait-post-dropdown .fa {
+    color: #2b7fff;
+}
+
+.dropdown-menu .zibll-ait-post-dropdown:hover,
+.dropdown-menu .zibll-ait-post-dropdown:focus {
+    color: #2b7fff;
+    background: var(--muted-bg-color);
+    text-decoration: none;
+}
+
+.zibll-ait-action .zibll-ait-lang {
+    display: inline-block;
+    width: auto;
+    height: 28px;
+    padding: 2px 6px;
+    margin-left: 10px;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+.zibll-ait-label {
+    cursor: default;
+    font-size: 12px;
+    padding: 2px 8px;
+}
+
+.zibll-ait-text {
+    word-break: break-word;
+}
+
+/* 文章 / 帖子翻译按钮栏与译文区 */
+.zibll-ait-post-bar {
+    clear: both;
+}
+
+/* 翻译下拉菜单（语言选择） */
+.zibll-ait-post-menu .dropdown-menu {
+    display: none;
+    min-width: 140px;
+    padding: 6px 0;
+    margin-top: 4px;
+}
+
+.zibll-ait-post-menu.open .dropdown-menu {
+    display: block;
+}
+
+.zibll-ait-lang-item {
+    display: block;
+    padding: 8px 16px;
+    color: inherit;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.zibll-ait-lang-item:hover,
+.zibll-ait-lang-item:focus {
+    background: var(--muted-bg-color);
+    text-decoration: none;
+}
+
+.zibll-ait-post-result:empty {
+    display: none;
+}
+
+/* 选择翻译语言弹窗 */
+.zibll-ait-lang-list {
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* 语言弹窗宽度：初始值，JS 打开时按最长语言名动态调整 */
+.zibll-ait-lang-modal .modal-dialog {
+    width: auto;
+    max-width: 480px;
+    margin: 1.75rem auto;
+}
+
+.zibll-ait-lang-pick {
+    font-size: 13px;
+    padding: 6px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.zibll-ait-lang-pick:hover,
+.zibll-ait-lang-pick:focus {
+    text-decoration: none;
+}
+
+.zibll-ait-post-box {
+    background: var(--muted-bg-color);
+    border: 1px solid var(--main-border-color);
+    border-radius: var(--main-radius);
+    padding: 12px 16px;
+}
+
+/* 译文框操作按钮（复制 / 隐藏） */
+.zibll-ait-post-box-actions .but {
+    font-size: 12px;
+    padding: 2px 8px;
+}
+
+.zibll-ait-post-box-body {
+    line-height: 1.8;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.zibll-ait-post-box-body img {
+    max-width: 100%;
+    height: auto;
+}
+
+.zibll-ait-post-box-body a {
+    color: var(--main-color, #2b7fff);
+}
+
+/* 翻译弹窗：复用子比主题自带的 zib_modal 弹窗（炫彩头部样式）
+   仅对译文内容做少量适配，其余外观完全沿用主题 */
+#zibll-ait-modal .zibll-ait-modal-content {
+    padding: 15px 5px;
+    line-height: 1.7;
+    word-break: break-word;
+}
+
+/* 修复译文回复排版：确保评论卡片内部结构正确 */
+.zibll-ait-translation-reply {
+    /* 标记译文回复，便于JS精准定位 */
+}
+
+.zibll-ait-translation-reply .comment-body,
+.zibll-ait-translation-reply .comment-content,
+.zibll-ait-translation-reply [id^="comment-content-"] {
+    position: relative;
+}
+
+.zibll-ait-translation-reply .zibll-ait-tip {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    font-style: normal;
+}
+
+/* AI 摘要样式 */
+.ait-ai-summary {
+    margin-bottom: 20px;
+}
+
+/* @提及徽章 */
+.ait-mention-ai {
+    display: inline-flex;
+    align-items: center;
+    color: var(--theme-color, #2c7be5);
+    font-weight: 600;
+}
+
+.ait-mention-ai::before {
+    margin-right: 4px;
+}
+
+
+
