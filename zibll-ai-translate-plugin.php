@@ -46,13 +46,18 @@ define('ZIBLL_AIT_PATH', plugin_dir_path(__FILE__));
 define('ZIBLL_AIT_URL', plugin_dir_url(__FILE__));
 
 // 在线更新：GitHub 仓库与 Release Tag（请替换为实际地址）
-define('ZIBLL_AIT_REPO', '2496950846/zibll-ai-translate-plugin');
+define('ZIBLL_AIT_REPO', 'ZibllTeam/zibll-ai-translate-plugin');
 define('ZIBLL_AIT_TAG', 'v1.0.0');
-define('ZIBLL_AIT_REPO_URL', 'https://github.com/2496950846/zibll-ai-translate-plugin/releases');
+define('ZIBLL_AIT_REPO_URL', 'https://github.com/ZibllTeam/zibll-ai-translate-plugin/releases');
 // 国内镜像代理（GitHub API / zipball 下载加速，留空则直连 GitHub）
 define('ZIBLL_AIT_PROXY', 'https://mirror.ghproxy.com/');
 // 备用镜像（主镜像不可用时自动切换）
 define('ZIBLL_AIT_PROXY_BAK', 'https://gh-proxy.com/');
+// CNB.Cool 更新源（备选）
+define('ZIBLL_AIT_CNB_REPO', 'zibllteam/zibll-ai-translate-plugin');
+define('ZIBLL_AIT_CNB_TAG', 'v1.0.0');
+define('ZIBLL_AIT_CNB_URL', 'https://cnb.cool/zibllteam/zibll-ai-translate-plugin/-/releases');
+define('ZIBLL_AIT_CNB_API', 'https://cnb.cool/api/v1/repos/zibllteam/zibll-ai-translate-plugin');
 
 // 统一读取独立 option（严禁写入 zibll_options）
 if (!function_exists('zibll_ait_options')) {

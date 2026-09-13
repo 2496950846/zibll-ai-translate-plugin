@@ -27,7 +27,7 @@ function zibll_ait_create_options()
     CSF::createOptions($prefix, array(
         'menu_title'      => 'AI翻译',
         'menu_slug'       => 'zibll_ait_options',
-        'framework_title' => 'AI翻译 <small>v1.0.0</small>',
+        'framework_title' => 'AI翻译 <small>v' . ZIBLL_AIT_PLUGIN_VERSION . '</small>',
         'theme'           => 'light',
     ));
 

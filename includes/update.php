@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 
 /**
  * 获取 GitHub Release 数据（带缓存）
- * 优先直连 GitHub，失败后自动切换国内镜像代理重试。
+ * 优先直连 GitHub，失败后自动切换国内镜像代理重试，再失败则尝试 CNB.Cool 备选源。
  */
 function zibll_ait_get_github_release()
 {
@@ -22,6 +22,30 @@ function zibll_ait_get_github_release()
         return $cached;
     }
 
+    // 尝试 GitHub API
+    $release = zibll_ait_fetch_github_release();
+    if ($release) {
+        set_transient($cache_key, $release, HOUR_IN_SECONDS);
+        return $release;
+    }
+
+    // GitHub 不可用时尝试 CNB.Cool
+    $release = zibll_ait_fetch_cnb_release();
+    if ($release) {
+        set_transient($cache_key, $release, HOUR_IN_SECONDS);
+        return $release;
+    }
+
+    error_log('[ZibllAI翻译] GitHub 与 CNB.Cool 均无法获取 Release 数据');
+    set_transient($cache_key, false, HOUR_IN_SECONDS);
+    return false;
+}
+
+/**
+ * 从 GitHub API 获取 Release 数据
+ */
+function zibll_ait_fetch_github_release()
+{
     $base_url = 'https://api.github.com/repos/' . ZIBLL_AIT_REPO . '/releases/tags/' . ZIBLL_AIT_TAG;
     // 主镜像与备用镜像
     $proxies = array();
@@ -49,7 +73,6 @@ function zibll_ait_get_github_release()
             $body = wp_remote_retrieve_body($response);
             $data = json_decode($body, true);
             if ($data && isset($data['tag_name'])) {
-                set_transient($cache_key, $data, HOUR_IN_SECONDS);
                 return $data;
             }
         }
@@ -67,16 +90,50 @@ function zibll_ait_get_github_release()
                 $body = wp_remote_retrieve_body($retry);
                 $data = json_decode($body, true);
                 if ($data && isset($data['tag_name'])) {
-                    set_transient($cache_key, $data, HOUR_IN_SECONDS);
                     return $data;
                 }
             }
         }
     }
 
-    error_log('[ZibllAI翻译] GitHub API 直连与所有镜像代理均失败');
-    set_transient($cache_key, false, HOUR_IN_SECONDS);
     return false;
+}
+
+/**
+ * 从 CNB.Cool (Gitea) API 获取 Release 数据
+ */
+function zibll_ait_fetch_cnb_release()
+{
+    $api_base = ZIBLL_AIT_CNB_API;
+    $url = $api_base . '/releases/tags/' . ZIBLL_AIT_CNB_TAG;
+
+    $response = wp_remote_get($url, array(
+        'timeout' => 15,
+        'headers' => array(
+            'Accept' => 'application/json',
+        ),
+        'sslverify' => false,
+    ));
+
+    if (is_wp_error($response) || 200 !== (int) wp_remote_retrieve_response_code($response)) {
+        return false;
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+    if (!$data || !isset($data['tag_name'])) {
+        return false;
+    }
+
+    // 将 Gitea 数据转换为 GitHub 兼容格式
+    return array(
+        'tag_name' => $data['tag_name'],
+        'name' => $data['name'] ?? $data['tag_name'],
+        'body' => $data['note'] ?? $data['description'] ?? '',
+        'html_url' => $data['html_url'] ?? $url,
+        'zipball_url' => $api_base . '/zipball/' . $data['tag_name'],
+        'assets' => array(),
+    );
 }
 
 /**
@@ -173,7 +230,7 @@ function zibll_ait_update_csf_fields()
             . '<a href="javascript:;" class="but jb-blue mr10 zibll-ait-online-update" data-version="' . esc_attr($data['version']) . '"><i class="fa fa-cloud-download fa-fw"></i> 在线更新</a>'
             . '<a href="javascript:;" class="but c-yellow ajax-submit"><i class="fa fa-ban fa-fw"></i> 忽略此次更新</a>'
             . '</div>'
-            . '<div style="text-align:right;font-size:12px;opacity:.5;"><a style="color:inherit;" target="_blank" href="' . esc_url($data['html_url']) . '">查看 GitHub Release</a></div>'
+            . '<div style="text-align:right;font-size:12px;opacity:.5;"><a style="color:inherit;" target="_blank" href="' . esc_url($data['html_url']) . '">查看 GitHub Release</a> | <a style="color:inherit;" target="_blank" href="' . esc_url(ZIBLL_AIT_CNB_URL) . '">CNB.Cool Releases</a></div>'
             . '</div>';
 
         $log = '<div class="box-theme">' . $data['update_content'] . '</div>';
@@ -206,6 +263,8 @@ function zibll_ait_update_csf_fields()
         $proxy_hint = '<p class="muted-2-color">当前使用镜像代理检测：<code>' . esc_html(rtrim(ZIBLL_AIT_PROXY, '/')) . '</code>。若直连 GitHub 正常，可留空此常量改用直连。</p>';
     }
 
+    $cnb_hint = '<p class="muted-2-color">备选更新源：<a href="' . esc_url(ZIBLL_AIT_CNB_URL) . '" target="_blank" rel="noopener">CNB.Cool Releases</a>（GitHub 不可用时自动切换）。</p>';
+
     return array(
         array(
             'type'    => 'notice',
@@ -218,6 +277,7 @@ function zibll_ait_update_csf_fields()
             'content' => '<p>插件更新来源为 GitHub Release（<a href="' . esc_url(ZIBLL_AIT_REPO_URL) . '" target="_blank" rel="noopener">子比AI翻译插件</a>，Tag: <code>' . esc_html(ZIBLL_AIT_TAG) . '</code>）。</p>'
                 . '<p>点击「检测更新」立即检查；有新版时点「在线更新」自动下载并覆盖升级。</p>'
                 . $proxy_hint
+                . $cnb_hint
                 . '<p class="muted-2-color">升级前建议备份插件目录与数据库；在线更新过程请勿刷新页面。</p>',
         ),
     );
@@ -425,11 +485,27 @@ function zibll_ait_get_download_url($version)
 {
     // 确保 tag 有 v 前缀（GitHub 标准格式）
     $tag = 'v' . ltrim((string) $version, 'vV');
-    // zipball API：https://api.github.com/repos/{repo}/zipball/{tag}
+    
+    // 先尝试 GitHub zipball
     $raw_url = 'https://api.github.com/repos/' . ZIBLL_AIT_REPO . '/zipball/' . $tag;
     // 若有镜像代理，则拼接前缀（优先主镜像，回退备用镜像）
     $proxy = ZIBLL_AIT_PROXY ? rtrim(ZIBLL_AIT_PROXY, '/') : (ZIBLL_AIT_PROXY_BAK ? rtrim(ZIBLL_AIT_PROXY_BAK, '/') : '');
-    return $proxy ? $proxy . '/' . ltrim($raw_url, 'http://') : $raw_url;
+    $url = $proxy ? $proxy . '/' . ltrim($raw_url, 'http://') : $raw_url;
+    
+    // 测试 GitHub 下载是否可用
+    $test = wp_remote_head($url, array('timeout' => 10, 'sslverify' => false));
+    if (!is_wp_error($test) && in_array((int) wp_remote_retrieve_response_code($test), array(200, 302))) {
+        return $url;
+    }
+    
+    // GitHub 不可用则尝试 CNB.Cool
+    $cnb_url = ZIBLL_AIT_CNB_API . '/zipball/' . $tag;
+    $test_cnb = wp_remote_head($cnb_url, array('timeout' => 10, 'sslverify' => false));
+    if (!is_wp_error($test_cnb) && in_array((int) wp_remote_retrieve_response_code($test_cnb), array(200, 302))) {
+        return $cnb_url;
+    }
+    
+    return false;
 }
 
 /**
