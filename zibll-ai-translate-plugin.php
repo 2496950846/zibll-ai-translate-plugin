@@ -50,9 +50,10 @@ define('ZIBLL_AIT_REPO', 'ZibllTeam/zibll-ai-translate-plugin');
 define('ZIBLL_AIT_TAG', 'v1.0.0');
 define('ZIBLL_AIT_REPO_URL', 'https://github.com/ZibllTeam/zibll-ai-translate-plugin/releases');
 // 国内镜像代理（GitHub API / zipball 下载加速，留空则直连 GitHub）
-define('ZIBLL_AIT_PROXY', 'https://mirror.ghproxy.com/');
+// ghproxy.com 已关停，改用稳定镜像
+define('ZIBLL_AIT_PROXY', 'https://gh-proxy.com/');
 // 备用镜像（主镜像不可用时自动切换）
-define('ZIBLL_AIT_PROXY_BAK', 'https://gh-proxy.com/');
+define('ZIBLL_AIT_PROXY_BAK', 'https://ghproxy.net/');
 // CNB.Cool 更新源（备选）
 define('ZIBLL_AIT_CNB_REPO', 'zibllteam/zibll-ai-translate-plugin');
 define('ZIBLL_AIT_CNB_TAG', 'v1.0.0');
